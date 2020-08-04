@@ -7,7 +7,21 @@ import Dishdetail from './DishdetailComponent';
 import { View, ScrollView, Platform, Image, StyleSheet, Text } from 'react-native';
 import { createStackNavigator, createDrawerNavigator, DrawerItems, SafeAreaView } from 'react-navigation';
 import { Icon } from 'react-native-elements';
+import { connect } from 'react-redux';
+import {fetchDishes, fetchComments, fetchLeaders, fetchPromos } from '../redux/ActionCreators';
+import Reservation from './ReservationComponent';
 
+const mapStateToProps = state => {
+    return {
+    }
+}
+
+const mapDispatchToProps = dispatch => ({
+    fetchDishes : () => dispatch(fetchDishes()),
+    fetchComments: () => dispatch(fetchComments()),
+    fetchLeaders : () => dispatch(fetchLeaders()),
+    fetchPromos : () => dispatch(fetchPromos())
+});
 const MenuNavigator = createStackNavigator({
     Menu: {screen: Menu,
         navigationOptions: ({ navigation }) => ({
@@ -63,6 +77,22 @@ const AboutUsNavigator = createStackNavigator({
 });
 const ContactUsNavigator = createStackNavigator({
     ContactUs :{screen : ContactUs}
+},
+{   
+    navigationOptions: ({ navigation }) => ({
+        headerStyle: {
+            backgroundColor: '#512DAB'
+        },
+        headerTintColor: '#fff',
+        headerTitleStyle: {
+            color: '#fff'
+        },
+        headerLeft: <Icon name='menu' size={24}
+                color='white' onPress={() => navigation.toggleDrawer()} />
+    })
+});
+const ReservationNavigator = createStackNavigator({
+    Reservation : {screen : Reservation}
 },
 {   
     navigationOptions: ({ navigation }) => ({
@@ -153,7 +183,22 @@ const MainNavigator = createDrawerNavigator({
                     />
             )
         }
-    }   
+    },
+    Reservation: {
+        screen: ReservationNavigator,
+        navigationOptions: {
+            title: 'Reserve Table',
+            drawerLabel: 'Reserve Table',
+            drawerIcon: ({ tintColor }) => (
+                <Icon
+                    name='cutlery'
+                    type='font-awesome'
+                    size={24}
+                    color={tintColor}
+                    />
+            )
+        }
+    }     
 },
 {
     drawerBackgroundColor: '#D1C4E9',
@@ -162,6 +207,14 @@ const MainNavigator = createDrawerNavigator({
 
 
 class Main extends Component {
+
+    componentDidMount()
+    {
+        this.props.fetchDishes();
+        this.props.fetchComments();
+        this.props.fetchLeaders();
+        this.props.fetchPromos();
+    }
 
     render ()
     {
@@ -196,4 +249,4 @@ const styles = StyleSheet.create({
         height: 60
     }
 })
-export default Main;
+export default connect(mapStateToProps, mapDispatchToProps)(Main);
