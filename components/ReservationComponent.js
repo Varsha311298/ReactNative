@@ -4,6 +4,7 @@ import { Card } from 'react-native-elements';
 import DatePicker from 'react-native-datepicker';
 import * as Animatable from 'react-native-animatable';
 import * as Permissions from 'expo-permissions';
+import * as Calendar from 'expo-calendar'
 import { Notifications} from 'expo';
 
 class Reservation extends Component 
@@ -32,8 +33,54 @@ class Reservation extends Component
     {
         console.log(JSON.stringify(this.state));
         //this.toggleModal();
+        this.addReservationToCalendar(this.state.date);
+    }
+    async getDefaultCalendarSource() {
+        const calendars = await Calendar.getCalendarsAsync();
+        const defaultCalendars = calendars.filter(each => each.allowsModifications === true);
+        const defaultCalendar = defaultCalendars[0];
+        console.log(defaultCalendar);
+        return defaultCalendar;
     }
 
+    async addReservationToCalendar(dateInfo)
+    {
+        await this.obtainCalendarPermission();
+        const calendar = await this.getDefaultCalendarSource();
+
+        const modifiedStart = new Date(Date.parse(dateInfo));
+        const modifiedEnd = new Date(Date.parse(dateInfo) + 2*60*60*1000);
+        
+        const defaultCalendarSource =
+                Platform.OS === 'ios'
+                ? await getDefaultCalendarSource()
+                : { isLocalAccount: true, name: 'Expo Calendar' };
+                
+        const calendarId = await Calendar.createEventAsync(
+            calendar.id , {
+                title:  'Con Fusion Table Reservation',
+                startDate : modifiedStart,
+                endDate: modifiedEnd,
+                timeZone: 'Asia/Hong_Kong',
+                location: '121, Clear Water Bay Road, Clear Water Bay, Kowloon, Hong Kong'
+            }
+        ).then((event) => {
+            console.log('Calendar create Event Async success');
+        }).catch((error) => {
+            console.log(error+'Calendar  createEvent async failure');
+        });
+
+    }
+    async obtainCalendarPermission()
+    {
+        let calendarPermission = await Permissions.askAsync(Permissions.CALENDAR);
+        if(calendarPermission.status !== 'granted')
+        {
+             Alert.alert('Permission not granted');
+            
+        }
+        return calendarPermission;
+    }
     resetForm()
     {
         this.setState(
@@ -138,6 +185,7 @@ class Reservation extends Component
                                 {
                                     text: 'OK',
                                     onPress: () => {
+                                        this.handleReservation();
                                         this.presentLocalNotification(this.state.date);
                                         this.resetForm()
                                     }
